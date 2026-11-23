@@ -89,3 +89,99 @@ def test_without_flag_no_session(tmp_path):
 
     assert result.exit_code == 0, result.output
     assert seen["session"] is None
+
+
+class TestListResources:
+    @pytest.fixture
+    def project(self, tmp_path):
+        stack = tmp_path / "config" / "dev" / "vpc.yaml"
+        stack.parent.mkdir(parents=True)
+        (tmp_path / "config" / "config.yaml").write_text(
+            "project_code: demo\nregion: eu-west-1\n"
+        )
+        stack.write_text("template:\n  path: vpc.yaml\n")
+        return str(tmp_path)
+
+    def run(self, project, args, terminal=True):
+        import io
+
+        from rich.console import Console
+
+        from sceptre_interactive.resources import StackResources
+
+        console = Console(file=io.StringIO(), force_terminal=terminal, width=200)
+        fetched = {}
+
+        def fake_fetch_all(stacks):
+            fetched["stacks"] = [s.name for s in stacks]
+            return [
+                StackResources(
+                    "dev/vpc",
+                    "demo-dev-vpc",
+                    "eu-west-1",
+                    [
+                        {
+                            "LogicalResourceId": "VPC",
+                            "PhysicalResourceId": "vpc-0abc",
+                            "ResourceType": "AWS::EC2::VPC",
+                            "ResourceStatus": "CREATE_COMPLETE",
+                        }
+                    ],
+                )
+            ]
+
+        with (
+            patch("sceptre_interactive.cli._console", return_value=console),
+            patch("sceptre_interactive.resources.fetch_all", fake_fetch_all),
+            patch(
+                "sceptre.plan.plan.SceptrePlan.describe_resources",
+                return_value={
+                    "dev/vpc": {
+                        "dev/vpc": [
+                            {
+                                "LogicalResourceId": "VPC",
+                                "PhysicalResourceId": "vpc-0abc",
+                            }
+                        ]
+                    }
+                },
+            ) as describe,
+        ):
+            result = CliRunner().invoke(cli, ["--dir", project] + args)
+        return result, console.file.getvalue(), fetched, describe
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ["list", "resources", "dev", "-i"],
+            ["-i", "list", "resources", "dev"],
+            ["list", "resources", "dev", "--urls"],
+        ],
+    )
+    def test_interactive_tables(self, project, args):
+        result, output, fetched, describe = self.run(project, args)
+        assert result.exit_code == 0, result.output
+        assert fetched["stacks"] == ["dev/vpc"]
+        assert "vpc-0abc" in output
+        describe.assert_not_called()
+
+    def test_plain_without_flag(self, project):
+        result, output, fetched, describe = self.run(
+            project, ["list", "resources", "dev"]
+        )
+        assert result.exit_code == 0, result.output
+        assert fetched == {}
+        describe.assert_called_once()
+        assert "LogicalResourceId" in result.output
+
+    def test_piped_output_stays_plain(self, project):
+        result, output, fetched, describe = self.run(
+            project, ["list", "resources", "dev", "-i"], terminal=False
+        )
+        assert fetched == {}
+        describe.assert_called_once()
+
+    def test_registered_once(self):
+        resources = cli.commands["list"].commands["resources"]
+        assert len(interactive_opts(resources)) == 1
+        assert sum("--urls" in p.opts for p in resources.params) == 1

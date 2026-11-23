@@ -152,6 +152,57 @@ def main():
             "finished.svg",
             "sceptre-interactive -i launch dev",
         )
+    save(resources_view(), "resources.svg", "sceptre-interactive list resources dev -i")
+
+
+def resources_view():
+    from sceptre_interactive.resources import StackResources, stack_table
+
+    def res(logical_id, physical_id, resource_type, status="CREATE_COMPLETE"):
+        return {
+            "LogicalResourceId": logical_id,
+            "PhysicalResourceId": physical_id,
+            "ResourceType": resource_type,
+            "ResourceStatus": status,
+        }
+
+    stacks = [
+        StackResources(
+            "network/vpc",
+            "demo-network-vpc",
+            "eu-west-1",
+            [
+                res("VPC", "vpc-0a1b2c3d4e5f60718", "AWS::EC2::VPC"),
+                res(
+                    "InternetGateway",
+                    "igw-0f1e2d3c4b5a69788",
+                    "AWS::EC2::InternetGateway",
+                ),
+                res(
+                    "GatewayAttachment",
+                    "IGW|vpc-0a1b2c3d4e5f60718",
+                    "AWS::EC2::VPCGatewayAttachment",
+                ),
+            ],
+        ),
+        StackResources(
+            "app/service",
+            "demo-app-service",
+            "eu-west-1",
+            [
+                res("Cluster", "demo-cluster", "AWS::ECS::Cluster"),
+                res("TaskRole", "demo-app-service-TaskRole-1A2B3C", "AWS::IAM::Role"),
+                res("Logs", "/ecs/demo-service", "AWS::Logs::LogGroup"),
+                res(
+                    "Queue",
+                    "https://sqs.eu-west-1.amazonaws.com/123456789012/demo-jobs",
+                    "AWS::SQS::Queue",
+                    "UPDATE_IN_PROGRESS",
+                ),
+            ],
+        ),
+    ]
+    return Group(*(stack_table(stack) for stack in stacks))
 
 
 if __name__ == "__main__":

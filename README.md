@@ -54,6 +54,35 @@ Confirmation prompts work as usual; the live display starts after them. When
 output isn't a terminal (CI, piping to a file), `-i` falls back to Sceptre's
 normal log output. `--no-colour` is respected.
 
+### Resources with console links
+
+`list resources` gets `-i` too. It shows a table per stack, like the
+CloudFormation console's Resources tab, with each Physical ID linked to its
+page in the AWS console. The stack name links to the stack in the
+CloudFormation console.
+
+```bash
+sceptre-interactive list resources dev -i
+sceptre-interactive list resources dev --urls   # print URLs instead of links
+```
+
+![Resource tables with console-linked physical IDs](docs/resources.svg)
+
+- Links are terminal hyperlinks: Cmd/Ctrl-click to open. They work in iTerm2,
+  VS Code, WezTerm, kitty, Windows Terminal and most modern terminals. Use
+  `--urls` where they don't.
+- Resources come from the paginated `ListStackResources` API, so all of a
+  stack's resources are listed with type and status. Plain `sceptre list
+  resources` shows only IDs, and at most 100 per stack.
+- AWS access uses each stack's own profile, region and IAM role from your
+  Sceptre config.
+- Console URLs come from a hand-maintained list of common resource types in
+  `sceptre_interactive/console_links.py`. Types not in the list are shown
+  without a link. AWS doesn't publish these console URLs, so a link can break
+  if AWS redesigns a console page.
+- When output is piped, `-i` keeps Sceptre's normal output (`--urls` still
+  prints the tables).
+
 ## Try it without AWS
 
 ```bash
