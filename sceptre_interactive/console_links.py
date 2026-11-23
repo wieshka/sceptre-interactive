@@ -2,8 +2,10 @@
 AWS console URLs for CloudFormation resources, like the links on the
 Resources tab of the CloudFormation console.
 
-``console_url(resource_type, physical_id, region)`` returns a URL, or None
-for resource types without a known console page. Add types to ``RESOURCE_URLS``.
+``console_url(resource_type, physical_id, region)`` returns a URL, or None.
+Known resource types use the curated ``RESOURCE_URLS``; others fall back to
+AWS's (undocumented) ARN redirect when the physical ID is an ARN. Add types
+to ``RESOURCE_URLS`` for exact links.
 """
 
 from typing import Callable, Dict, Optional
@@ -191,17 +193,34 @@ RESOURCE_URLS: Dict[str, Callable[[str, str], Optional[str]]] = {
 }
 
 
+def arn_fallback_url(physical_id: str) -> Optional[str]:
+    """
+    Generic console redirect by ARN, for resources without a curated URL.
+
+    ``console.aws.amazon.com/go/view?arn=`` is not documented by AWS (it is
+    used by the community), so it is best-effort and only used for the
+    commercial partition.
+    """
+    if not physical_id.startswith("arn:aws:"):
+        return None
+    return f"https://console.aws.amazon.com/go/view?arn={_enc(physical_id)}"
+
+
 def console_url(resource_type: str, physical_id: str, region: str) -> Optional[str]:
-    """Console URL for a resource, or None if there's no known page for it."""
-    if not physical_id or not region:
+    """
+    Console URL for a resource: the curated page for its type if known,
+    otherwise the ARN redirect if the physical ID is an ARN, otherwise None.
+    """
+    if not physical_id:
         return None
     build = RESOURCE_URLS.get(resource_type)
-    if build is None:
-        return None
-    try:
-        return build(physical_id, region)
-    except Exception:  # pragma: no cover - never break listing over a link
-        return None
+    url = None
+    if build is not None and region:
+        try:
+            url = build(physical_id, region)
+        except Exception:  # pragma: no cover - never break listing over a link
+            url = None
+    return url or arn_fallback_url(physical_id)
 
 
 def stack_url(stack_name: str, region: str) -> str:

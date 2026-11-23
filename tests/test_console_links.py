@@ -91,7 +91,8 @@ def test_console_url(resource_type, physical_id, expected):
         ("AWS::EC2::VPC", "", REGION),
         ("AWS::EC2::VPC", "vpc-1", ""),
         ("AWS::ECS::Service", "not-an-arn", REGION),
-        ("AWS::ECS::TaskDefinition", "arn:aws:ecs:r:1:task-definition/web", REGION),
+        ("AWS::Some::Unknown", "arn:aws-cn:x:cn-north-1:1:thing/a", "cn-north-1"),
+        ("AWS::Some::Unknown", "arn:aws-us-gov:x:us-gov-west-1:1:a", "us-gov-west-1"),
     ],
 )
 def test_no_url(resource_type, physical_id, region):
@@ -109,3 +110,27 @@ def test_stack_url():
         f"{BASE}/cloudformation/home?region={REGION}"
         "#/stacks/resources?stackId=demo-net-vpc"
     )
+
+
+class TestArnFallback:
+    GO = "https://console.aws.amazon.com/go/view?arn="
+
+    def test_unknown_type_with_arn(self):
+        arn = "arn:aws:glue:eu-west-1:123456789012:job/nightly"
+        assert console_url("AWS::Glue::Job", arn, REGION) == (
+            self.GO + "arn%3Aaws%3Aglue%3Aeu-west-1%3A123456789012%3Ajob%2Fnightly"
+        )
+
+    def test_used_when_curated_builder_cannot_parse(self):
+        arn = "arn:aws:ecs:eu-west-1:123456789012:task-definition/web"
+        assert console_url("AWS::ECS::TaskDefinition", arn, REGION).startswith(self.GO)
+
+    def test_used_without_region(self):
+        arn = "arn:aws:sns:eu-west-1:123456789012:topic"
+        assert console_url("AWS::SNS::Topic", arn, "").startswith(self.GO)
+
+    def test_curated_link_wins(self):
+        arn = "arn:aws:sns:eu-west-1:123456789012:topic"
+        assert console_url("AWS::SNS::Topic", arn, REGION) == (
+            f"{BASE}/sns/v3/home?region={REGION}#/topic/{arn}"
+        )

@@ -77,9 +77,12 @@ sceptre-interactive list resources dev --urls   # print URLs instead of links
 - AWS access uses each stack's own profile, region and IAM role from your
   Sceptre config.
 - Console URLs come from a hand-maintained list of common resource types in
-  `sceptre_interactive/console_links.py`. Types not in the list are shown
-  without a link. AWS doesn't publish these console URLs, so a link can break
-  if AWS redesigns a console page.
+  `sceptre_interactive/console_links.py`. AWS doesn't publish these console
+  URLs, so a link can break if AWS redesigns a console page.
+- For types not in the list whose Physical ID is an ARN, the link falls back
+  to `https://console.aws.amazon.com/go/view?arn=<arn>`, a generic redirect
+  AWS uses but doesn't document. It's best-effort and only used for the
+  commercial partition. Other unlisted resources are shown without a link.
 - When output is piped, `-i` keeps Sceptre's normal output (`--urls` still
   prints the tables).
 
