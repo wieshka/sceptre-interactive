@@ -4,18 +4,13 @@ A live progress display for [Sceptre](https://github.com/Sceptre/sceptre),
 in the style of `docker pull`, instead of a scrolling log of CloudFormation
 events.
 
-```text
-sceptre launch  1/6 done  2 running  00:42
-✔ network/vpc       ━━━━━━━━━━━━━━━━━━━━ CREATE_COMPLETE           00:21
-⠋ network/subnets   ━━━━━━━━━━━━         CREATE_IN_PROGRESS 3/5    00:19
-    ↳ SubnetC       AWS::EC2::Subnet     CREATE_IN_PROGRESS
-    ↳ RouteAssocA   AWS::EC2::SubnetRou… CREATE_IN_PROGRESS
-⠋ security/kms      ━━━━━━━━━━           CREATE_IN_PROGRESS 1/2    00:19
-⧗ app/database                           waiting on dependencies
-⧗ app/queue                              waiting on dependencies
-⧗ app/service                            waiting on dependencies
-security/kms - Creating Stack
-```
+While a launch is running:
+
+![Live display while stacks are being created](docs/running.svg)
+
+What stays on screen when it finishes, here with a failed stack:
+
+![Final table and summary after a run with a failure](docs/finished.svg)
 
 - One line per stack: spinner, progress bar, CloudFormation status, elapsed time
 - The resources currently changing are listed under each running stack
@@ -95,6 +90,13 @@ python3 -m venv .venv && . .venv/bin/activate
 pip install -e ".[dev]"
 black --check sceptre_interactive tests
 pytest --cov=sceptre_interactive
+```
+
+The README screenshots are rendered by the plugin's own view code. After
+changing how the display looks, regenerate them with:
+
+```bash
+python docs/render_screenshots.py
 ```
 
 On macOS with Python 3.13, if `import sceptre_interactive` fails inside the

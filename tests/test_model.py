@@ -187,3 +187,27 @@ class TestPlanState:
         snap = {s.name: s for s in stacks}
         state.add_event(ResourceEvent("a", "VPC", "AWS::EC2::VPC", "CREATE_COMPLETE"))
         assert snap["a"].resources["VPC"].status == "CREATE_IN_PROGRESS"
+
+
+def test_failed_resource_reason_kept_over_stack_rollback_reason():
+    state = make_state()
+    state.add_event(
+        ResourceEvent(
+            "a",
+            "LB",
+            "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "CREATE_FAILED",
+            "two subnets required",
+        )
+    )
+    state.add_event(
+        ResourceEvent(
+            "a",
+            "proj-a",
+            "AWS::CloudFormation::Stack",
+            "ROLLBACK_IN_PROGRESS",
+            "The following resource(s) failed to create: [LB].",
+        )
+    )
+    assert state.stacks["a"].message == "LB: two subnets required"
+    assert state.stacks["a"].cfn_status == "ROLLBACK_IN_PROGRESS"

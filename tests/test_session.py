@@ -80,7 +80,7 @@ def test_failed_stack_in_summary(fast_demo, sceptre_stream_handler):
     console = terminal_console()
     responses = run_plan(InteractiveSession(console=console), "app/service")
     assert StackStatus.FAILED in responses.values()
-    assert "✘ app/service: The following resource(s) failed to create" in (
+    assert "✘ app/service: LoadBalancer: Resource handler returned message" in (
         console.file.getvalue()
     )
 

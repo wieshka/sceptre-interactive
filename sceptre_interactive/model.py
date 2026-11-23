@@ -187,7 +187,13 @@ class PlanState:
                 external_name is None or event.logical_id == external_name
             ):
                 stack.cfn_status = event.status
-                if event.reason and event.reason not in NOISE_REASONS:
+                # Keep a failed resource's reason: it's the root cause, while
+                # the stack's own reason is a generic "resource(s) failed".
+                if (
+                    event.reason
+                    and event.reason not in NOISE_REASONS
+                    and not stack.resources_failed
+                ):
                     stack.message = event.reason
                 return
             resource = stack.resources.get(event.logical_id)
