@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sceptre-interactive-plugin"
+version = "0.1.0"
+description = "Live, docker-pull style progress display for Sceptre stack operations"
+readme = "README.md"
+authors = [{ name = "Viesturs Proskins", email = "viesturs.proskins@gmail.com" }]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+keywords = ["sceptre", "aws", "cloudformation", "tui", "progress"]
+dependencies = [
+    "sceptre>=4.7.0",
+    "click>=7.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "black"]
+
+[project.scripts]
+sceptre-interactive = "sceptre_interactive.cli:main"
+sceptre-interactive-demo = "sceptre_interactive.demo:main"
+
+[project.entry-points."sceptre.cli.plugins"]
+interactive = "sceptre_interactive:register"
+
+[project.urls]
+"Homepage" = "https://github.com/wieshka/sceptre-interactive-plugin"
+
+[tool.setuptools.packages.find]
+include = ["sceptre_interactive*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
