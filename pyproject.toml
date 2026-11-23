@@ -38,7 +38,7 @@ sceptre-interactive-demo = "sceptre_interactive.demo:main"
 interactive = "sceptre_interactive:register"
 
 [project.urls]
-"Homepage" = "https://github.com/wieshka/sceptre-interactive-plugin"
+"Homepage" = "https://github.com/wieshka/sceptre-interactive"
 
 [tool.setuptools.packages.find]
 include = ["sceptre_interactive*"]

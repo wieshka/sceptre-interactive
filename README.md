@@ -36,7 +36,7 @@ point, so plain `sceptre -i` would work once Sceptre loads such plugins.
 Requires Python 3.10+.
 
 ```bash
-pip install "sceptre-interactive-plugin @ git+https://github.com/wieshka/sceptre-interactive-plugin"
+pip install "sceptre-interactive-plugin @ git+https://github.com/wieshka/sceptre-interactive"
 ```
 
 ## Usage
