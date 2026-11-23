@@ -28,10 +28,24 @@ point, so plain `sceptre -i` would work once Sceptre loads such plugins.
 
 ## Installation
 
-Requires Python 3.10+.
+Requires Python 3.10+ and Sceptre 4.7+. Install it into the same environment
+as Sceptre, pinned to a release tag.
+
+With Poetry, from your Sceptre project's folder:
 
 ```bash
-pip install "sceptre-interactive-plugin @ git+https://github.com/wieshka/sceptre-interactive"
+poetry add "git+https://github.com/wieshka/sceptre-interactive.git#v0.2.0"
+```
+
+![poetry add, then running sceptre-interactive](docs/install.svg)
+
+Run it with `poetry run sceptre-interactive ...`. To upgrade, run `poetry add`
+again with the new tag.
+
+With pip:
+
+```bash
+pip install "sceptre-interactive-plugin @ git+https://github.com/wieshka/sceptre-interactive.git@v0.2.0"
 ```
 
 ## Usage

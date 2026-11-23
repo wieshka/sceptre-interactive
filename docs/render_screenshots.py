@@ -153,6 +153,68 @@ def main():
             "sceptre-interactive -i launch dev",
         )
     save(resources_view(), "resources.svg", "sceptre-interactive list resources dev -i")
+    save(install_view(), "install.svg", "my-stacks — poetry")
+
+
+# Recorded from a real `poetry add` into a fresh Poetry project (Poetry's own
+# colours). The middle of the 34-package list is elided.
+INSTALL_SOURCE = "git+https://github.com/wieshka/sceptre-interactive.git#v0.2.0"
+INSTALL_FIRST = [
+    ("six", "1.17.0"),
+    ("python-dateutil", "2.9.0.post0"),
+    ("urllib3", "2.8.0"),
+]
+INSTALL_LAST = [
+    ("networkx", "2.6.3"),
+    ("rich", "15.0.0"),
+    ("sceptre", "4.7.0"),
+    ("sceptre-interactive-plugin", "0.2.0 c6dadf1"),
+]
+INSTALL_TOTAL = 34
+
+
+def install_view():
+    from rich.text import Text
+
+    def prompt(command):
+        line = Text()
+        line.append("~/my-stacks ", style="bold blue")
+        line.append("$ ", style="bold green")
+        line.append(command, style="bold")
+        return line
+
+    def installed(name, version):
+        line = Text("  ")
+        line.append("-", style="bold green")
+        line.append(" Installing ")
+        line.append(name, style="cyan")
+        line.append(" (")
+        line.append(version, style="green")
+        line.append(")")
+        return line
+
+    lines = [prompt(f'poetry add "{INSTALL_SOURCE}"'), Text("")]
+    lines += [Text("Updating dependencies", style="blue")]
+    lines += [Text("Resolving dependencies...", style="blue"), Text("")]
+    ops = Text()
+    ops.append("Package operations", style="bold")
+    ops.append(": ")
+    ops.append(str(INSTALL_TOTAL), style="blue")
+    ops.append(" installs, ")
+    ops.append("0", style="blue")
+    ops.append(" updates, ")
+    ops.append("0", style="blue")
+    ops.append(" removals")
+    lines += [ops, Text("")]
+    lines += [installed(*p) for p in INSTALL_FIRST]
+    hidden = INSTALL_TOTAL - len(INSTALL_FIRST) - len(INSTALL_LAST)
+    lines += [Text(f"  ⋮ {hidden} more", style="dim")]
+    lines += [installed(*p) for p in INSTALL_LAST]
+    lines += [Text(""), Text("Writing lock file", style="blue"), Text("")]
+    lines += [prompt("poetry run sceptre-interactive --version")]
+    lines += [Text("Sceptre, version 4.7.0"), Text("")]
+    lines += [prompt("poetry run sceptre-interactive -i launch dev")]
+    return Group(*lines)
 
 
 def resources_view():
